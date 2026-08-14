@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#020506" name="theme-color"/>
+<title>Imperio Drinks | Administración</title>
+<meta content="5.0" name="imperio-version"/>
+<link href="./css/styles.css" rel="stylesheet"/>
+</head>
+<body class="admin-page" style="--imperio-logo:url('./assets/logo-imperio-drinks.jpeg')">
+<div class="ambient ambient-one"></div>
+<div class="ambient ambient-two"></div>
+<div class="shell admin-shell">
+<header class="topbar brand-panel">
+<div class="brand-lockup">
+<img alt="Logo de Imperio Drinks" class="brand-logo" src="./assets/logo-imperio-drinks.jpeg"/>
+<div class="brand-copy"><p class="eyebrow">PANEL PRIVADO</p><h1>Administración de precios</h1><p>Los cambios se guardan automáticamente en este dispositivo.</p><div class="brand-badges"><span>PLANES</span><span>PRODUCTOS</span><span>PRECIOS EDITABLES</span></div></div>
+</div>
+<div class="top-actions">
+<a class="btn btn-ghost" href="index.html">Volver al presupuestador</a>
+<button class="btn btn-primary" id="saveTop" type="button">Guardar ahora</button>
+</div>
+</header>
+<div class="notice hidden" id="fileWarning"><strong>Modo local:</strong> los valores se comparten entre páginas cuando el navegador permite almacenamiento local. Para usar los mismos datos en distintos dispositivos será necesaria una base de datos online.</div>
+<main class="admin-layout">
+<nav aria-label="Secciones de administración" class="admin-nav panel">
+<button class="nav-btn active" data-tab="general" type="button">Datos generales</button>
+<button class="nav-btn" data-tab="plans" type="button">Planes</button>
+<button class="nav-btn" data-tab="products" type="button">Productos</button>
+<button class="nav-btn" data-tab="discounts" type="button">Descuentos</button>
+<button class="nav-btn" data-tab="backup" type="button">Copia de seguridad</button>
+</nav>
+<div class="admin-content panel">
+<section class="admin-section active" id="tab-general">
+<div class="admin-title"><div><p class="eyebrow">CONFIGURACIÓN</p><h2>Datos generales</h2></div><span class="autosave-badge">Autoguardado activo</span></div>
+<div class="formula-card">
+<strong>Fórmula del presupuesto</strong>
+<p>(Precio del plan × personas facturables) + adicionales + traslado + otros gastos - descuento por cantidad - descuento manual.</p>
+<small>El descuento por cantidad se calcula solamente sobre el subtotal del plan.</small>
+</div>
+<div class="grid grid-3">
+<label class="field"><span>Nombre comercial</span><input id="businessName"/></label>
+<label class="field"><span>WhatsApp del negocio</span><input id="businessPhone" inputmode="tel"/></label>
+<label class="field"><span>Instagram</span><input id="businessInstagram"/></label>
+<label class="field"><span>Alias de pago</span><input id="paymentAlias"/></label>
+<label class="field"><span>Vigencia del presupuesto (días)</span><input id="validityDays" min="1" type="number"/></label>
+<label class="field"><span>Cantidad mínima</span><input id="minimumGuests" min="1" type="number"/></label>
+<label class="field"><span>Seña predeterminada (%)</span><input id="depositPercent" max="100" min="0" type="number"/></label>
+<label class="field"><span>Código de país para WhatsApp</span><input id="countryCode" inputmode="numeric" placeholder="54"/></label>
+<label class="field field-wide"><span>Condiciones del presupuesto</span><textarea id="conditions" rows="5"></textarea></label>
+</div>
+</section>
+<section class="admin-section" id="tab-plans">
+<div class="admin-title"><div><p class="eyebrow">PRECIOS POR PERSONA</p><h2>Planes</h2></div><button class="btn btn-gold" id="addPlan" type="button">Agregar plan</button></div>
+<div class="editor-stack" id="plansEditor"></div>
+</section>
+<section class="admin-section" id="tab-products">
+<div class="admin-title"><div><p class="eyebrow">ADICIONALES</p><h2>Productos y precios</h2></div><button class="btn btn-gold" id="addProduct" type="button">Agregar producto</button></div>
+<label class="field product-search"><span>Buscar producto</span><input id="productSearch" placeholder="Nombre o categoría"/></label>
+<div class="table-wrap">
+<table class="product-table">
+<thead><tr><th>Categoría</th><th>Producto</th><th>Unidad</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
+<tbody id="productsEditor"></tbody>
+</table>
+</div>
+</section>
+<section class="admin-section" id="tab-discounts">
+<div class="admin-title"><div><p class="eyebrow">POR CANTIDAD</p><h2>Rangos de descuento</h2><p class="status">Ejemplo cargado: 5% desde 101 personas y 10% desde 151.</p></div><button class="btn btn-gold" id="addTier" type="button">Agregar rango</button></div>
+<div class="formula-card"><strong>Importante</strong><p>Los rangos no deben superponerse. El porcentaje se descuenta del subtotal del plan, no de los productos ni de la logística.</p></div>
+<div class="editor-stack" id="tiersEditor"></div>
+</section>
+<section class="admin-section" id="tab-backup">
+<div class="admin-title"><div><p class="eyebrow">SEGURIDAD</p><h2>Copia de seguridad</h2></div></div>
+<div class="admin-card">
+<h3>Exportar o importar precios</h3>
+<p class="status">Descargá una copia antes de hacer cambios importantes o usala para trasladar la configuración a otro equipo.</p>
+<div class="top-actions align-start">
+<button class="btn btn-gold" id="exportData" type="button">Descargar copia JSON</button>
+<label class="btn btn-ghost file-button">Importar JSON<input accept="application/json,.json" hidden="" id="importData" type="file"/></label>
+<button class="btn btn-danger" id="resetData" type="button">Restaurar valores iniciales</button>
+</div>
+</div>
+</section>
+<div class="admin-footer">
+<div class="status" id="saveStatus">Configuración cargada.</div>
+<div class="top-actions"><a class="btn btn-ghost" href="index.html">Ver presupuestador</a><button class="btn btn-primary" id="saveBottom" type="button">Guardar cambios</button></div>
+</div>
+</div>
+</main>
+</div>
+<div aria-live="polite" class="toast" id="toast" role="status"></div>
+<script src="./js/logo-data.js"></script><script src="./js/store.js"></script><script src="./js/admin.js"></script></body>
+</html>

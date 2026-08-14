@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#020506" name="theme-color"/>
+<meta content="Presupuestador de bebidas para eventos de Imperio Drinks" name="description"/>
+<title>Imperio Drinks | Presupuestador</title>
+<meta content="5.0" name="imperio-version"/>
+<link href="./css/styles.css" rel="stylesheet"/>
+</head>
+<body class="app-page" style="--imperio-logo:url('./assets/logo-imperio-drinks.jpeg')">
+<div class="ambient ambient-one"></div>
+<div class="ambient ambient-two"></div>
+<div class="shell">
+<header class="topbar brand-panel">
+<div class="brand-lockup">
+<img alt="Logo de Imperio Drinks" class="brand-logo" src="./assets/logo-imperio-drinks.jpeg"/>
+<div class="brand-copy">
+<p class="eyebrow">IMPERIO DRINKS</p>
+<h1>Presupuestador de eventos</h1>
+<p>Planes por persona, productos adicionales y PDF listo para compartir.</p><div class="brand-badges"><span>BAR MÓVIL</span><span>PLANES POR PERSONA</span><span>PDF + WHATSAPP</span></div>
+</div>
+</div>
+<div class="top-actions">
+<a class="btn btn-ghost" href="admin.html">Administrar precios</a>
+<button class="btn btn-gold" id="reloadPrices" type="button">Actualizar precios</button>
+</div>
+</header>
+<div class="notice hidden" id="fileWarning">
+<strong>Modo local:</strong> el cálculo y la descarga funcionan, pero para compartir el PDF directamente con WhatsApp la web debe estar publicada con HTTPS. En modo local se descargará el archivo para adjuntarlo manualmente.
+    </div>
+<main class="layout">
+<form autocomplete="off" class="panel form-panel" id="quoteForm">
+<section class="section section-first">
+<div class="section-head">
+<span class="step">01</span>
+<div><h2>Cliente y evento</h2><p>Estos datos aparecerán en el presupuesto.</p></div>
+</div>
+<div class="grid grid-3">
+<label class="field"><span>N.º de presupuesto</span><input id="quoteNumber" placeholder="ID-2026-001"/></label>
+<label class="field"><span>Nombre del cliente</span><input id="clientName" placeholder="Nombre y apellido"/></label>
+<label class="field"><span>WhatsApp del cliente</span><input id="clientPhone" inputmode="tel" placeholder="Ej.: 3442 000000"/><small class="hint">Con código de área, sin 0 ni 15.</small></label>
+<label class="field"><span>Tipo de evento</span><select id="eventType"><option>Cumpleaños</option><option>Casamiento</option><option>15 años</option><option>Fiesta empresarial</option><option>Recepción</option><option>Otro evento</option></select></label>
+<label class="field"><span>Fecha</span><input id="eventDate" type="date"/></label>
+<label class="field"><span>Lugar</span><input id="eventLocation" placeholder="Salón / localidad"/></label>
+<label class="field"><span>Duración</span><input id="serviceHours" placeholder="Ej.: 5 horas"/></label>
+<label class="field"><span>Cantidad de personas</span><input id="guestCount" min="50" step="1" type="number" value="50"/><small class="hint" id="guestHint"></small></label>
+<label class="field"><span>Seña (%)</span><input id="depositPercent" max="100" min="0" step="1" type="number" value="30"/></label>
+</div>
+</section>
+<section class="section">
+<div class="section-head">
+<span class="step">02</span>
+<div><h2>Elegí el plan</h2><p>El precio se multiplica por la cantidad facturable de personas.</p></div>
+</div>
+<div class="plan-grid" id="planGrid"></div>
+</section>
+<section class="section">
+<div class="section-head">
+<span class="step">03</span>
+<div><h2>Productos adicionales</h2><p>Cada adicional se calcula por precio unitario × cantidad.</p></div>
+</div>
+<div class="product-picker">
+<select id="productSelect"></select>
+<button class="btn btn-ghost" id="addProduct" type="button">Agregar producto</button>
+</div>
+<div class="selected-products" id="selectedProducts"></div>
+</section>
+<section class="section">
+<div class="section-head">
+<span class="step">04</span>
+<div><h2>Ajustes y observaciones</h2><p>El descuento automático se aplica únicamente al valor del plan.</p></div>
+</div>
+<div class="grid grid-3">
+<label class="field"><span>Traslado / logística</span><input id="travelCost" min="0" step="100" type="number" value="0"/></label>
+<label class="field"><span>Otros gastos</span><input id="otherCost" min="0" step="100" type="number" value="0"/></label>
+<label class="field"><span>Descuento manual ($)</span><input id="manualDiscount" min="0" step="100" type="number" value="0"/></label>
+<label class="field field-wide"><span>Observaciones</span><textarea id="notes" placeholder="Horario, modalidad de servicio, condiciones especiales, etc." rows="4"></textarea></label>
+</div>
+</section>
+</form>
+<aside class="panel summary">
+<div class="summary-brand"><img alt="" src="./assets/logo-imperio-drinks.jpeg"/><span>RESUMEN DEL PRESUPUESTO</span></div>
+<div class="summary-head">
+<h2 id="summaryPlan">Seleccioná un plan</h2>
+<p id="summaryPeople">Para 50 personas</p>
+</div>
+<div class="total-block">
+<span>Total estimado</span>
+<strong id="grandTotal">$ 0</strong>
+<small id="perPersonTotal">$ 0 por persona facturable</small>
+</div>
+<div class="summary-lines">
+<div class="summary-line"><span>Plan</span><strong id="planSubtotal">$ 0</strong></div>
+<div class="summary-line"><span>Productos adicionales</span><strong id="productsSubtotal">$ 0</strong></div>
+<div class="summary-line"><span>Traslado y otros</span><strong id="adjustmentsSubtotal">$ 0</strong></div>
+<div class="summary-line"><span id="autoDiscountLabel">Descuento por cantidad</span><strong class="discount-good" id="autoDiscountAmount">-$ 0</strong></div>
+<div class="summary-line"><span>Descuento manual</span><strong class="discount-good" id="manualDiscountAmount">-$ 0</strong></div>
+</div>
+<div class="deposit-grid">
+<div class="deposit"><span>Seña</span><strong id="depositAmount">$ 0</strong><small id="depositLabel">30% del total</small></div>
+<div class="deposit"><span>Saldo</span><strong id="balanceAmount">$ 0</strong><small>Luego de la seña</small></div>
+</div>
+<div class="summary-actions">
+<button class="btn btn-whatsapp" id="sharePdf" type="button">Compartir PDF por WhatsApp</button>
+<button class="btn btn-primary" id="downloadPdf" type="button">Descargar PDF</button>
+<button class="btn btn-gold" id="copyQuote" type="button">Copiar resumen</button>
+</div>
+<p class="legal" id="shareHelp">En celulares compatibles se abre el menú para elegir WhatsApp y enviar el PDF como archivo.</p>
+</aside>
+</main>
+</div>
+<div aria-live="polite" class="toast" id="toast" role="status"></div>
+<script src="./js/logo-data.js"></script><script src="./js/store.js"></script><script src="./js/app.js"></script></body>
+</html>
