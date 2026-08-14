@@ -20,6 +20,7 @@
 <div class="top-actions">
 <a class="btn btn-ghost" href="index.html">Volver al presupuestador</a>
 <button class="btn btn-primary" id="saveTop" type="button">Guardar ahora</button>
+<button class="btn btn-danger" id="logoutBtn" type="button">Cerrar sesión</button>
 </div>
 </header>
 <div class="notice hidden" id="fileWarning"><strong>Modo local:</strong> los valores se comparten entre páginas cuando el navegador permite almacenamiento local. Para usar los mismos datos en distintos dispositivos será necesaria una base de datos online.</div>
@@ -90,5 +91,18 @@
 </main>
 </div>
 <div aria-live="polite" class="toast" id="toast" role="status"></div>
-<script src="./js/logo-data.js"></script><script src="./js/store.js"></script><script src="./js/admin.js"></script></body>
+<script src="./js/login.js"></script><script src="./js/logo-data.js"></script><script src="./js/store.js"></script><script src="./js/admin.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        if (confirm('¿Deseas cerrar sesión?')) {
+          logout();
+        }
+      });
+    }
+  });
+</script>
+</body>
 </html>

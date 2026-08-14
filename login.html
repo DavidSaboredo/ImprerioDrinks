@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#020506" name="theme-color"/>
+<title>Imperio Drinks | Acceso administración</title>
+<link href="./css/styles.css" rel="stylesheet"/>
+<style>
+.login-container {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+.login-box {
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(16, 27, 31, .97), rgba(6, 10, 12, .99));
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .025);
+  padding: 40px 30px;
+}
+.login-header {
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+.login-header img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid var(--cyan);
+  object-fit: cover;
+}
+.login-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--cream);
+  font-family: Impact, "Arial Black", sans-serif;
+  font-style: italic;
+  text-transform: uppercase;
+}
+.login-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+.login-form {
+  display: grid;
+  gap: 16px;
+}
+.login-field {
+  display: grid;
+  gap: 8px;
+}
+.login-field label {
+  font-size: .86rem;
+  font-weight: 800;
+  color: #d9e0e2;
+}
+.login-field input {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .038);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  font-size: 1rem;
+}
+.login-field input:hover {
+  background: rgba(255, 255, 255, .05);
+}
+.login-field input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 4px rgba(36, 231, 239, .08);
+}
+.login-error {
+  padding: 12px;
+  border: 1px solid rgba(255, 117, 106, .34);
+  border-radius: 10px;
+  background: rgba(255, 117, 106, .08);
+  color: #ffc8c2;
+  font-size: .9rem;
+  display: none;
+}
+.login-error.show {
+  display: block;
+}
+.login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 17px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4ef6fb, #09b8c2);
+  color: #001114;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease;
+  width: 100%;
+  font-size: 1rem;
+  margin-top: 8px;
+}
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(36, 231, 239, .18);
+}
+.login-btn:active {
+  transform: translateY(0);
+}
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.login-info {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--muted);
+  font-size: .85rem;
+  line-height: 1.4;
+}
+.login-info a {
+  color: var(--cyan);
+  text-decoration: none;
+  font-weight: 700;
+}
+.login-info a:hover {
+  text-decoration: underline;
+}
+</style>
+</head>
+<body class="app-page" style="--imperio-logo: url('./assets/logo-imperio-drinks.jpeg')">
+<div class="ambient ambient-one"></div>
+<div class="ambient ambient-two"></div>
+
+<div class="login-container">
+  <div class="login-box">
+    <div class="login-header">
+      <img alt="Logo de Imperio Drinks" src="./assets/logo-imperio-drinks.jpeg"/>
+      <h1>Administración</h1>
+      <p>Acceso restringido</p>
+    </div>
+    
+    <form class="login-form" id="loginForm">
+      <div class="login-error" id="errorMsg"></div>
+      
+      <div class="login-field">
+        <label for="username">Usuario</label>
+        <input id="username" type="text" placeholder="Ingresá tu usuario" autocomplete="username" required/>
+      </div>
+      
+      <div class="login-field">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" placeholder="Ingresá tu contraseña" autocomplete="current-password" required/>
+      </div>
+      
+      <button class="login-btn" id="submitBtn" type="submit">Acceder</button>
+    </form>
+    
+    <div class="login-info">
+      <p>Este panel es privado. Contacta al administrador si no tienes acceso.</p>
+      <p><a href="./index.html">← Volver al presupuestador</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="./js/login.js"></script>
+</body>
+</html>
