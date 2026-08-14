@@ -1,5 +1,5 @@
 // Credenciales
-const ADMIN_USER = 'impreiodrinks';
+const ADMIN_USER = 'imperiodrinks';
 const ADMIN_PASSWORD = 'Bassi2026';
 const SESSION_KEY = 'imperio_admin_session';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 horas
