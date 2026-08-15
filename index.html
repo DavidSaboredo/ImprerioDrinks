@@ -44,7 +44,16 @@
 <label class="field"><span>Tipo de evento</span><select id="eventType"><option>Cumpleaños</option><option>Casamiento</option><option>15 años</option><option>Fiesta empresarial</option><option>Recepción</option><option>Otro evento</option></select></label>
 <label class="field"><span>Fecha</span><input id="eventDate" type="date"/></label>
 <label class="field"><span>Lugar</span><input id="eventLocation" placeholder="Salón / localidad"/></label>
-<label class="field"><span>Duración</span><input id="serviceHours" placeholder="Ej.: 5 horas"/></label>
+<label class="field">
+  <span>Duración en horas</span>
+  <input
+    id="serviceHours"
+    type="number"
+    min="0"
+    step="0.5"
+    placeholder="Ej.: 5"
+  />
+</label>
 <label class="field"><span>Cantidad de personas</span><input id="guestCount" min="50" step="1" type="number" value="50"/><small class="hint" id="guestHint"></small></label>
 <label class="field"><span>Seña (%)</span><input id="depositPercent" max="100" min="0" step="1" type="number" value="30"/></label>
 </div>
