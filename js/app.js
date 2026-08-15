@@ -15,7 +15,8 @@
     productsSubtotal: $("#productsSubtotal"), adjustmentsSubtotal: $("#adjustmentsSubtotal"), autoDiscountLabel: $("#autoDiscountLabel"),
     autoDiscountAmount: $("#autoDiscountAmount"), manualDiscountAmount: $("#manualDiscountAmount"), depositAmount: $("#depositAmount"),
     depositLabel: $("#depositLabel"), balanceAmount: $("#balanceAmount"), sharePdf: $("#sharePdf"), downloadPdf: $("#downloadPdf"),
-    copyQuote: $("#copyQuote"), reloadPrices: $("#reloadPrices"), shareHelp: $("#shareHelp"), toast: $("#toast")
+    downloadInternalPdf: $("#downloadInternalPdf"), copyQuote: $("#copyQuote"), reloadPrices: $("#reloadPrices"), shareHelp: $("#shareHelp"), toast: $("#toast"),
+    internalCostsSection: $("#internalCostsSection"), internalCostAmount: $("#internalCostAmount"), profitAmount: $("#profitAmount"), marginAmount: $("#marginAmount")
   };
 
   if (location.protocol === "file:") $("#fileWarning").classList.remove("hidden");
@@ -99,9 +100,9 @@
   }
 
   function renderProductSelect() {
-    const activeProducts = config.products.filter(product => product.active);
+    const activeProducts = config.products.filter(product => product.active && product.visible);
     els.productSelect.innerHTML = '<option value="">Seleccionar producto…</option>' + activeProducts.map(product =>
-      `<option value="${escapeHtml(product.id)}">${escapeHtml(product.category)} · ${escapeHtml(product.name)} — ${money(product.price)} / ${escapeHtml(product.unit)}</option>`
+      `<option value="${escapeHtml(product.id)}">${escapeHtml(product.category)} · ${escapeHtml(product.name)} — ${money(product.salePrice || 0)} / ${escapeHtml(product.unit)}</option>`
     ).join("");
   }
 
@@ -128,14 +129,15 @@
       if (!product) return;
       const row = document.createElement("div");
       row.className = "product-row";
+      const salePrice = product.salePrice || 0;
       row.innerHTML = `
-        <div><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.category)} · ${money(product.price)} por ${escapeHtml(product.unit)}</small></div>
+        <div><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.category)} · ${money(salePrice)} por ${escapeHtml(product.unit)}</small></div>
         <input aria-label="Cantidad de ${escapeHtml(product.name)}" type="number" min="0.01" step="0.01" value="${item.qty}">
-        <strong class="line-total">${money(product.price * item.qty)}</strong>
+        <strong class="line-total">${money(salePrice * item.qty)}</strong>
         <button class="icon-btn" type="button" aria-label="Quitar producto">×</button>`;
       row.querySelector("input").addEventListener("input", event => {
         item.qty = Math.max(0.01, Number(event.target.value) || 0.01);
-        row.querySelector(".line-total").textContent = money(product.price * item.qty);
+        row.querySelector(".line-total").textContent = money(salePrice * item.qty);
         update();
       });
       row.querySelector("button").addEventListener("click", () => {
@@ -161,7 +163,7 @@
       const product = config.products.find(candidate => candidate.id === item.productId && candidate.active);
       if (!product) return null;
       const qty = Math.max(0, Number(item.qty) || 0);
-      const unitPrice = Math.max(0, Number(product.price) || 0);
+      const unitPrice = Math.max(0, Number(product.salePrice) || 0);
       return { ...item, qty, product, unitPrice, total: unitPrice * qty };
     }).filter(Boolean);
     const productsSubtotal = products.reduce((sum, item) => sum + item.total, 0);
@@ -180,11 +182,24 @@
     const deposit = total * depositPercent / 100;
     const balance = Math.max(0, total - deposit);
 
+    // Calcular costos internos
+    const internalCostsData = ImperioCosts.calculateInternalCosts(config, {
+      planId: plan?.id,
+      guestCount: billableGuests,
+      serviceHours: numberOf(els.serviceHours),
+      selectedProducts: cart.map(item => ({ productId: item.productId, quantity: item.qty }))
+    });
+
+    const { profit, margin } = ImperioCosts.calculateProfitMargin(total, internalCostsData.totalCost);
+
     return {
       minimumGuests, enteredGuests, billableGuests, plan, planUnitPrice, planSubtotal,
       products, productsSubtotal, travel, other, adjustments, tier,
       automaticDiscountPercent, automaticDiscount, requestedManualDiscount, manualDiscount,
-      total, depositPercent, deposit, balance
+      total, depositPercent, deposit, balance,
+      // Costos internos
+      internalCosts: internalCostsData,
+      profit, margin
     };
   }
 
@@ -211,6 +226,16 @@
     els.depositAmount.textContent = money(data.deposit);
     els.depositLabel.textContent = `${data.depositPercent}% del total`;
     els.balanceAmount.textContent = money(data.balance);
+
+    // Mostrar costos internos si hay datos
+    if (data.internalCosts && data.internalCosts.totalCost > 0) {
+      els.internalCostsSection.style.display = "block";
+      els.internalCostAmount.textContent = money(data.internalCosts.totalCost);
+      els.profitAmount.textContent = money(data.profit);
+      els.marginAmount.textContent = `${data.margin}%`;
+    } else {
+      els.internalCostsSection.style.display = "none";
+    }
 
     if (data.requestedManualDiscount > data.manualDiscount) {
       els.manualDiscount.title = "El descuento fue limitado para que el total no sea negativo.";
@@ -300,7 +325,7 @@
   const pdfMoney = value => `$ ${Math.round(Number(value) || 0).toLocaleString("es-AR")}`;
   const approxWidth = (text, size, bold = false) => cleanPdfText(text).length * size * (bold ? 0.56 : 0.51);
 
-  function createPdfBytes() {
+  function createPdfBytes(qrDataUrl) {
     const data = quote();
     if (!data.plan) throw new Error("No hay un plan activo");
 
@@ -527,10 +552,207 @@
     return `Presupuesto_Imperio_Drinks_${client}.pdf`;
   }
 
-  function createPdfFile() {
+  function safeFilenameInternal() {
+    const client = (els.clientName.value.trim() || "cliente")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_-]+/g, "_");
+    return `Presupuesto_INTERNO_${client}.pdf`;
+  }
+
+  function createInternalPdfBytes(qrDataUrl) {
+    const data = quote();
+    if (!data.plan) throw new Error("No hay un plan activo");
+
+    const W = 595.28, H = 841.89, M = 38;
+    const COLORS = {
+      dark: [0.01, 0.025, 0.03], cyan: [0.06, 0.76, 0.79], amber: [0.95, 0.56, 0.10],
+      ink: [0.08, 0.10, 0.11], muted: [0.38, 0.44, 0.46], light: [0.965, 0.975, 0.975],
+      border: [0.82, 0.86, 0.87], white: [1, 1, 1], green: [0.10, 0.55, 0.31], red: [0.70, 0.16, 0.13]
+    };
+    const pages = [];
+    let commands = null;
+    let cursor = 0;
+
+    const rgb = color => `${color.map(value => Number(value).toFixed(3)).join(" ")} rg`;
+    const strokeRgb = color => `${color.map(value => Number(value).toFixed(3)).join(" ")} RG`;
+    const yFromTop = top => H - top;
+    const rectTop = (x, top, width, height, fill, stroke = null, lineWidth = 1) => {
+      const y = H - top - height;
+      commands.push(`${rgb(fill)} ${x} ${y} ${width} ${height} re f\n`);
+      if (stroke) commands.push(`${strokeRgb(stroke)} ${lineWidth} w ${x} ${y} ${width} ${height} re S\n`);
+    };
+    const textTop = (text, x, top, size = 10, bold = false, color = COLORS.ink) => {
+      const baseline = H - top - size;
+      commands.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${rgb(color)} 1 0 0 1 ${x} ${baseline} Tm (${pdfEscape(text)}) Tj ET\n`);
+    };
+    const rightTextTop = (text, rightX, top, size = 10, bold = false, color = COLORS.ink) => textTop(text, rightX - approxWidth(text, size, bold), top, size, bold, color);
+
+    function startPage(isContinuation = false) {
+      commands = [];
+      pages.push(commands);
+      rectTop(0, 0, W, H, COLORS.white);
+      rectTop(0, 0, W, 112, COLORS.dark);
+      rectTop(0, 109, W, 3, COLORS.amber);
+      textTop("⚙ DOCUMENTO INTERNO", 132, 27, 19, true, COLORS.white);
+      textTop("ANÁLISIS DE COSTOS Y GANANCIAS", 132, 54, 9.5, true, COLORS.amber);
+      textTop("Planificación y control de márgenes", 132, 72, 8.5, false, [0.78, 0.82, 0.83]);
+      rightTextTop(`Preparado: ${dateFormatter.format(new Date())}`, W - M, 29, 8.1, false, COLORS.amber);
+      rightTextTop(isContinuation ? "CONTINUACIÓN" : "", W - M, 49, 8.1, false, [0.80, 0.83, 0.84]);
+      cursor = 132;
+    }
+
+    function ensure(height) {
+      if (cursor + height > 792) startPage(true);
+    }
+
+    function sectionTitle(title) {
+      ensure(22);
+      textTop(title, M, cursor, 9.4, true, COLORS.amber);
+      cursor += 17;
+    }
+
+    function drawWrapped(text, x, widthChars, size = 8.2, color = COLORS.muted, bold = false, lineHeight = 11) {
+      const lines = wrapText(text, widthChars);
+      lines.forEach(line => { textTop(line, x, cursor, size, bold, color); cursor += lineHeight; });
+      return lines.length;
+    }
+
+    startPage(false);
+
+    sectionTitle("DATOS DEL EVENTO");
+    ensure(94);
+    rectTop(M, cursor, W - M * 2, 88, COLORS.light, COLORS.border, 0.7);
+    const leftX = M + 14, rightX = 310;
+    const peopleValue = data.enteredGuests && data.enteredGuests !== data.billableGuests
+      ? `${data.enteredGuests} invitados / ${data.billableGuests} facturables`
+      : `${data.billableGuests}`;
+    const fields = [
+      ["Cliente", els.clientName.value.trim() || "A confirmar", leftX, cursor + 12],
+      ["Plan", data.plan.name, rightX, cursor + 12],
+      ["Personas", peopleValue, leftX, cursor + 40],
+      ["Duración", els.serviceHours.value.trim() || "A confirmar", rightX, cursor + 40],
+      ["Evento", els.eventType.value, leftX, cursor + 68],
+      ["Fecha", formatDate(els.eventDate.value), rightX, cursor + 68]
+    ];
+    fields.forEach(([label, value, x, top]) => {
+      textTop(label, x, top, 7.2, true, COLORS.muted);
+      textTop(cleanPdfText(value).slice(0, x === leftX ? 52 : 34), x, top + 11, 9, false, COLORS.ink);
+    });
+    cursor += 105;
+
+    sectionTitle("DESGLOSE DE CONSUMO DE PRODUCTOS");
+    const consumptionRows = (data.internalCosts?.productDetails || []).map(detail => ({
+      label: `${detail.name}`,
+      quantity: `${detail.quantityNeeded} ${detail.unit}`,
+      cost: `${pdfMoney(detail.costPrice)}`,
+      amount: detail.subtotal,
+      isAdditional: detail.isAdditional || false
+    }));
+
+    if (consumptionRows.length > 0) {
+      function consumptionTableHeader() {
+        ensure(28);
+        rectTop(M, cursor, W - M * 2, 23, COLORS.dark);
+        textTop("PRODUCTO", M + 10, cursor + 7, 8.1, true, COLORS.white);
+        textTop("CANTIDAD", M + 280, cursor + 7, 8.1, true, COLORS.white);
+        textTop("COSTO UNIT.", M + 400, cursor + 7, 8.1, true, COLORS.white);
+        rightTextTop("SUBTOTAL", W - M - 10, cursor + 7, 8.1, true, COLORS.white);
+        cursor += 23;
+      }
+      consumptionTableHeader();
+      consumptionRows.forEach((row, index) => {
+        if (cursor + 22 > 790) { startPage(true); sectionTitle("DESGLOSE DE CONSUMO DE PRODUCTOS"); consumptionTableHeader(); }
+        if (index % 2 === 0) rectTop(M, cursor, W - M * 2, 21, [0.982, 0.987, 0.987]);
+        textTop(cleanPdfText(row.label).slice(0, 50), M + 10, cursor + 6, 8.1, row.isAdditional, COLORS.ink);
+        textTop(row.quantity, M + 280, cursor + 6, 8.1, false, COLORS.ink);
+        textTop(row.cost, M + 400, cursor + 6, 8.1, false, COLORS.ink);
+        rightTextTop(pdfMoney(row.amount), W - M - 10, cursor + 6, 8.1, false, COLORS.ink);
+        cursor += 21;
+      });
+      cursor += 10;
+    }
+
+    sectionTitle("RESUMEN DE COSTOS");
+    const costBreakdown = data.internalCosts?.costBreakdown || [];
+    costBreakdown.forEach((item, index) => {
+      ensure(15);
+      textTop(item.label, M + 15, cursor, 8.1, false, COLORS.muted);
+      rightTextTop(pdfMoney(item.amount), W - M - 15, cursor, 8.1, false, COLORS.ink);
+      cursor += 13;
+    });
+    cursor += 5;
+
+    ensure(65);
+    rectTop(M, cursor, W - M * 2, 58, COLORS.dark);
+    textTop("COSTO TOTAL DEL EVENTO", M + 15, cursor + 13, 11, true, COLORS.white);
+    rightTextTop(pdfMoney(data.internalCosts?.totalCost || 0), W - M - 15, cursor + 20, 17.5, true, COLORS.amber);
+    cursor += 73;
+
+    sectionTitle("ANÁLISIS COMERCIAL");
+    ensure(95);
+    rectTop(M, cursor, W - M * 2, 88, [0.982, 0.987, 0.987]);
+    textTop("Precio de venta al cliente", M + 15, cursor + 14, 8.2, false, COLORS.muted);
+    rightTextTop(pdfMoney(data.total), W - M - 15, cursor + 12, 12, true, COLORS.ink);
+    textTop("Menos: Costo interno", M + 15, cursor + 36, 8.2, false, COLORS.muted);
+    rightTextTop(pdfMoney(data.internalCosts?.totalCost || 0), W - M - 15, cursor + 34, 12, true, COLORS.red);
+    textTop("Ganancia estimada", M + 15, cursor + 58, 8.2, true, COLORS.muted);
+    rightTextTop(pdfMoney(data.profit), W - M - 15, cursor + 56, 14, true, COLORS.green);
+    textTop(`Margen: ${data.margin}%`, M + 15, cursor + 73, 8.2, true, COLORS.green);
+    cursor += 100;
+
+    pages.forEach((page, index) => {
+      const pageNumber = `${index + 1} / ${pages.length}`;
+      const originalCommands = commands;
+      commands = page;
+      textTop(pageNumber, (W - approxWidth(pageNumber, 7.1, false)) / 2, 811, 7.1, false, COLORS.muted);
+      commands = originalCommands;
+    });
+
+    const pageCount = pages.length;
+    const pageIds = Array.from({ length: pageCount }, (_, index) => 2 + index);
+    const contentIds = Array.from({ length: pageCount }, (_, index) => 2 + pageCount + index);
+    const fontRegularId = 2 + pageCount * 2;
+    const fontBoldId = fontRegularId + 1;
+    const maxObjectId = fontBoldId;
+    const objects = new Array(maxObjectId + 1);
+
+    objects[1] = latin1Bytes("<< /Type /Catalog /Pages 2 0 R >>");
+    objects[2] = latin1Bytes(`<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(" ")}] /Count ${pageCount} >>`);
+    pages.forEach((pageCommands, index) => {
+      objects[pageIds[index]] = latin1Bytes(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> /Contents ${contentIds[index]} 0 R >>`);
+      const content = latin1Bytes(pageCommands.join(""));
+      objects[contentIds[index]] = concatByteArrays([latin1Bytes(`<< /Length ${content.length} >>\nstream\n`), content, latin1Bytes("\nendstream")]);
+    });
+    objects[fontRegularId] = latin1Bytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+    objects[fontBoldId] = latin1Bytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+
+    const parts = [latin1Bytes("%PDF-1.4\n%âãÏÓ\n")];
+    const offsets = new Array(maxObjectId + 1).fill(0);
+    let totalLength = parts[0].length;
+    for (let id = 1; id <= maxObjectId; id += 1) {
+      offsets[id] = totalLength;
+      const objectBytes = concatByteArrays([latin1Bytes(`${id} 0 obj\n`), objects[id], latin1Bytes("\nendobj\n")]);
+      parts.push(objectBytes);
+      totalLength += objectBytes.length;
+    }
+
+    const xrefOffset = totalLength;
+    let xref = `xref\n0 ${maxObjectId + 1}\n0000000000 65535 f \n`;
+    for (let id = 1; id <= maxObjectId; id += 1) xref += `${String(offsets[id]).padStart(10, "0")} 00000 n \n`;
+    xref += `trailer\n<< /Size ${maxObjectId + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+    parts.push(latin1Bytes(xref));
+    return concatByteArrays(parts);
+  }
+
+  function createPdfFile(qrDataUrl) {
     if (!els.quoteNumber.value) els.quoteNumber.value = generateQuoteNumber();
-    const bytes = createPdfBytes();
+    const bytes = createPdfBytes(qrDataUrl);
     return new File([bytes], safeFilename(), { type: "application/pdf", lastModified: Date.now() });
+  }
+
+  function createInternalPdfFile(qrDataUrl) {
+    if (!els.quoteNumber.value) els.quoteNumber.value = generateQuoteNumber();
+    const bytes = createInternalPdfBytes(qrDataUrl);
+    return new File([bytes], safeFilenameInternal(), { type: "application/pdf", lastModified: Date.now() });
   }
 
   function downloadFile(file) {
@@ -593,13 +815,87 @@
 
   function downloadPdf() {
     try {
-      const file = createPdfFile();
+      generateQrAndDownloadPdf();
+    } catch (error) {
+      console.error(error);
+      showToast("No se pudo generar el PDF");
+    }
+  }
+
+  async function generateQrAndDownloadPdf() {
+    try {
+      let qrDataUrl = null;
+      try {
+        qrDataUrl = await generateQR();
+      } catch (e) {
+        console.warn("QR no disponible, descargando PDF sin QR", e);
+      }
+      const file = createPdfFile(qrDataUrl);
       downloadFile(file);
       showToast("PDF descargado");
     } catch (error) {
       console.error(error);
       showToast("No se pudo generar el PDF");
     }
+  }
+
+  function downloadInternalPdf() {
+    try {
+      generateQrAndDownloadInternalPdf();
+    } catch (error) {
+      console.error(error);
+      showToast("No se pudo generar el análisis interno");
+    }
+  }
+
+  async function generateQrAndDownloadInternalPdf() {
+    try {
+      let qrDataUrl = null;
+      try {
+        qrDataUrl = await generateQR();
+      } catch (e) {
+        console.warn("QR no disponible, descargando análisis sin QR", e);
+      }
+      const file = createInternalPdfFile(qrDataUrl);
+      downloadFile(file);
+      showToast("Análisis interno descargado");
+    } catch (error) {
+      console.error(error);
+      showToast("No se pudo generar el análisis interno");
+    }
+  }
+
+  async function generateQR() {
+    return new Promise((resolve, reject) => {
+      try {
+        if (typeof QRCode === 'undefined') {
+          reject(new Error("QRCode library not available"));
+          return;
+        }
+
+        const config = ImperioStore.load();
+        const phone = config.business.phone || "549000000000";
+        const message = `Consulta sobre presupuesto ${els.quoteNumber.value || ""}`;
+        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        
+        QRCode.toDataURL(whatsappUrl, {
+          errorCorrectionLevel: 'H',
+          type: 'image/png',
+          quality: 0.92,
+          margin: 1,
+          width: 200,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF',
+          }
+        }, (err, url) => {
+          if (err) reject(err);
+          else resolve(url);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   function updateShareHelp() {
@@ -614,6 +910,7 @@
   els.addProduct.addEventListener("click", addProduct);
   els.sharePdf.addEventListener("click", sharePdf);
   els.downloadPdf.addEventListener("click", downloadPdf);
+  els.downloadInternalPdf.addEventListener("click", downloadInternalPdf);
   els.copyQuote.addEventListener("click", copyMessage);
   els.reloadPrices.addEventListener("click", () => reloadConfig(true));
   window.addEventListener("storage", event => { if (event.key === ImperioStore.key) reloadConfig(false); });

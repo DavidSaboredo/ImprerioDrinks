@@ -5,7 +5,7 @@
   const $$ = selector => [...document.querySelectorAll(selector)];
   const els = {
     status: $("#saveStatus"), toast: $("#toast"), plans: $("#plansEditor"), products: $("#productsEditor"),
-    tiers: $("#tiersEditor"), productSearch: $("#productSearch")
+    tiers: $("#tiersEditor"), productSearch: $("#productSearch"), consumptions: $("#consumptionsEditor")
   };
 
   if (location.protocol === "file:") $("#fileWarning").classList.remove("hidden");
@@ -74,7 +74,8 @@
         <div class="grid grid-3">
           <label class="field"><span>Nombre</span><input data-field="name" value="${escapeHtml(plan.name)}"></label>
           <label class="field"><span>Precio por persona</span><input data-field="price" type="number" min="0" step="100" value="${plan.price}"></label>
-          <label class="field"><span>Descripción</span><input data-field="description" value="${escapeHtml(plan.description)}"></label>
+          <label class="field"><span>Personas base para consumo</span><input data-field="basePeople" type="number" min="1" value="${plan.basePeople || 50}"></label>
+          <label class="field field-wide"><span>Descripción</span><input data-field="description" value="${escapeHtml(plan.description)}"></label>
           <label class="field field-wide"><span>Incluye (una bebida o descripción por línea)</span><textarea data-field="includes" rows="6">${escapeHtml((plan.includes || []).join("\n"))}</textarea></label>
         </div>`;
       editor.querySelectorAll("input, textarea").forEach(input => input.addEventListener("input", () => {
@@ -95,6 +96,7 @@
     const plan = config.plans[Number(editor.dataset.index)];
     plan.name = editor.querySelector('[data-field="name"]').value.trim() || "Plan";
     plan.price = Math.round(nonNegative(editor.querySelector('[data-field="price"]').value));
+    plan.basePeople = Math.max(1, Math.floor(nonNegative(editor.querySelector('[data-field="basePeople"]').value, 50)));
     plan.description = editor.querySelector('[data-field="description"]').value.trim();
     plan.active = editor.querySelector('[data-field="active"]').checked;
     plan.includes = editor.querySelector('[data-field="includes"]').value.split(/\n/).map(value => value.trim()).filter(Boolean);
@@ -113,7 +115,8 @@
         <td><input aria-label="Categoría" data-field="category" value="${escapeHtml(product.category)}"></td>
         <td><input aria-label="Producto" data-field="name" value="${escapeHtml(product.name)}"></td>
         <td><input aria-label="Unidad" data-field="unit" value="${escapeHtml(product.unit)}"></td>
-        <td><input aria-label="Precio" data-field="price" type="number" min="0" step="100" value="${product.price}"></td>
+        <td><input aria-label="Costo de compra" data-field="costPrice" type="number" min="0" step="100" value="${product.costPrice || 0}"></td>
+        <td><input aria-label="Precio de venta" data-field="salePrice" type="number" min="0" step="100" value="${product.salePrice || 0}"></td>
         <td><label class="checkline"><input aria-label="Producto activo" data-field="active" type="checkbox" ${product.active !== false ? "checked" : ""}><span>Sí</span></label></td>
         <td><button class="btn btn-danger btn-small" data-action="delete" type="button">Eliminar</button></td>`;
       row.querySelectorAll("input").forEach(input => input.addEventListener("input", () => {
@@ -129,7 +132,7 @@
     });
     if (!els.products.children.length) {
       const row = document.createElement("tr");
-      row.innerHTML = '<td colspan="6"><div class="empty">No se encontraron productos.</div></td>';
+      row.innerHTML = '<td colspan="7"><div class="empty">No se encontraron productos.</div></td>';
       els.products.appendChild(row);
     }
   }
@@ -139,7 +142,8 @@
     product.category = row.querySelector('[data-field="category"]').value.trim() || "General";
     product.name = row.querySelector('[data-field="name"]').value.trim() || "Producto";
     product.unit = row.querySelector('[data-field="unit"]').value.trim() || "unidad";
-    product.price = Math.round(nonNegative(row.querySelector('[data-field="price"]').value));
+    product.costPrice = Math.round(nonNegative(row.querySelector('[data-field="costPrice"]').value));
+    product.salePrice = Math.round(nonNegative(row.querySelector('[data-field="salePrice"]').value));
     product.active = row.querySelector('[data-field="active"]').checked;
   }
 
@@ -175,6 +179,86 @@
     tier.percent = Math.min(100, nonNegative(editor.querySelector('[data-field="percent"]').value));
   }
 
+  function loadOperatingCosts() {
+    const costs = config.operatingCosts || {};
+    $("#staffCostPerHour").value = costs.staffCostPerHour || 0;
+    $("#transportCostInternal").value = costs.transportCostInternal || 0;
+    $("#rentalCostPerEvent").value = costs.rentalCostPerEvent || 0;
+    $("#otherCostsPerEvent").value = costs.otherCostsPerEvent || 0;
+  }
+
+  function readOperatingCosts() {
+    config.operatingCosts = {
+      staffCostPerHour: Math.round(nonNegative($("#staffCostPerHour").value)),
+      transportCostInternal: Math.round(nonNegative($("#transportCostInternal").value)),
+      rentalCostPerEvent: Math.round(nonNegative($("#rentalCostPerEvent").value)),
+      otherCostsPerEvent: Math.round(nonNegative($("#otherCostsPerEvent").value))
+    };
+  }
+
+  function renderConsumptions() {
+    els.consumptions.innerHTML = "";
+    config.plans.forEach((plan, planIndex) => {
+      const editor = document.createElement("div");
+      editor.className = "admin-card";
+      editor.dataset.planIndex = planIndex;
+      
+      const consumptionsHtml = (plan.consumptions || []).map((consumption, consIndex) => {
+        const product = config.products.find(p => p.id === consumption.productId);
+        const productName = product?.name || "Producto no encontrado";
+        return `
+          <div class="admin-row" data-consumption-index="${consIndex}">
+            <label class="field"><span>Producto</span><select data-field="productId">
+              <option value="">Seleccionar producto</option>
+              ${config.products.map(p => `<option value="${p.id}" ${consumption.productId === p.id ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
+            </select></label>
+            <label class="field"><span>Cantidad</span><input data-field="quantity" type="number" min="0" value="${consumption.quantity}"></label>
+            <button class="btn btn-danger btn-small" data-action="deleteConsumption" type="button">Eliminar</button>
+          </div>
+        `;
+      }).join("");
+      
+      editor.innerHTML = `
+        <h3>${escapeHtml(plan.name)}</h3>
+        <p class="status">Cantidad base: ${plan.basePeople} personas</p>
+        <div class="editor-stack">${consumptionsHtml || '<p class="status">Sin productos configurados</p>'}</div>
+        <button class="btn btn-gold btn-small" data-action="addConsumption" type="button">Agregar producto</button>
+      `;
+      
+      // Event listeners para consumptions
+      editor.querySelectorAll('[data-consumption-index] select, [data-consumption-index] input').forEach(input => {
+        input.addEventListener("input", () => {
+          const consIdx = Number(input.closest('[data-consumption-index]').dataset.consumptionIndex);
+          const consumption = plan.consumptions[consIdx];
+          if (input.dataset.field === "productId") {
+            consumption.productId = input.value;
+          } else if (input.dataset.field === "quantity") {
+            consumption.quantity = Math.max(0, Math.floor(nonNegative(input.value, 0)));
+          }
+          setDirty();
+        });
+      });
+
+      editor.querySelectorAll('[data-action="deleteConsumption"]').forEach(btn => {
+        btn.addEventListener("click", () => {
+          const consIdx = Number(btn.closest('[data-consumption-index]').dataset.consumptionIndex);
+          plan.consumptions.splice(consIdx, 1);
+          renderConsumptions();
+          setDirty();
+        });
+      });
+
+      editor.querySelector('[data-action="addConsumption"]').addEventListener("click", () => {
+        if (!plan.consumptions) plan.consumptions = [];
+        plan.consumptions.push({ productId: "", quantity: 1 });
+        renderConsumptions();
+        setDirty();
+      });
+
+      els.consumptions.appendChild(editor);
+    });
+  }
+
   function validateTiers() {
     const sorted = [...config.discountTiers].sort((a, b) => a.from - b.from);
     for (let index = 0; index < sorted.length; index += 1) {
@@ -189,6 +273,7 @@
   function save(showMessage = true) {
     clearTimeout(saveTimer);
     readGeneral();
+    readOperatingCosts();
     const tierError = validateTiers();
     if (tierError) {
       els.status.textContent = tierError;
@@ -211,8 +296,10 @@
 
   function renderAll() {
     loadGeneral();
+    loadOperatingCosts();
     renderPlans();
     renderProducts();
+    renderConsumptions();
     renderTiers();
     isDirty = false;
     els.status.textContent = config.updatedAt ? `Último guardado: ${formatSavedAt(config.updatedAt)}` : "Configuración inicial cargada.";
@@ -226,15 +313,16 @@
   }));
 
   $$("#tab-general input, #tab-general textarea").forEach(input => input.addEventListener("input", setDirty));
+  $$("#tab-operating input").forEach(input => input.addEventListener("input", setDirty));
   els.productSearch.addEventListener("input", renderProducts);
 
   $("#addPlan").addEventListener("click", () => {
-    config.plans.push({ id: ImperioStore.uid("plan"), name: "Nuevo plan", price: 0, active: true, description: "", includes: [] });
+    config.plans.push({ id: ImperioStore.uid("plan"), name: "Nuevo plan", price: 0, basePeople: 50, active: true, description: "", includes: [], consumptions: [] });
     renderPlans();
     setDirty();
   });
   $("#addProduct").addEventListener("click", () => {
-    config.products.push({ id: ImperioStore.uid("product"), category: "General", name: "Nuevo producto", unit: "unidad", price: 0, active: true });
+    config.products.push({ id: ImperioStore.uid("product"), category: "General", name: "Nuevo producto", unit: "unidad", costPrice: 0, salePrice: 0, active: true, visible: true });
     els.productSearch.value = "";
     renderProducts();
     setDirty();

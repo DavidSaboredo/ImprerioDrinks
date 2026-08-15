@@ -23,19 +23,36 @@
       { id: "tier-101", from: 101, to: 150, percent: 5 },
       { id: "tier-151", from: 151, to: null, percent: 10 }
     ],
+    operatingCosts: {
+      staffCostPerHour: 0,
+      transportCostInternal: 0,
+      rentalCostPerEvent: 0,
+      otherCostsPerEvent: 0
+    },
     plans: [
       {
         id: "super-economico",
         name: "Plan Súper Económico",
         price: 13000,
+        basePeople: 50,
         active: true,
         description: "Una opción simple con los clásicos más pedidos.",
-        includes: ["Gin", "Vodka", "Fernet", "Campari", "Gancia"]
+        includes: ["Gin", "Vodka", "Fernet", "Campari", "Gancia"],
+        consumptions: [
+          { productId: "gin", quantity: 2 },
+          { productId: "vodka", quantity: 3 },
+          { productId: "fernet", quantity: 4 },
+          { productId: "campari", quantity: 2 },
+          { productId: "gancia", quantity: 3 },
+          { productId: "hielo", quantity: 8 },
+          { productId: "vasos", quantity: 5 }
+        ]
       },
       {
         id: "silver",
         name: "Plan Silver",
         price: 18000,
+        basePeople: 50,
         active: true,
         description: "Variedad de tragos clásicos y agua mineral.",
         includes: [
@@ -44,12 +61,26 @@
           "Vodka con Speed o jugo de naranja",
           "Gin tonic",
           "Agua mineral 500 ml"
+        ],
+        consumptions: [
+          { productId: "gin", quantity: 3 },
+          { productId: "vodka", quantity: 4 },
+          { productId: "fernet", quantity: 5 },
+          { productId: "campari", quantity: 1 },
+          { productId: "gancia", quantity: 4 },
+          { productId: "coca", quantity: 6 },
+          { productId: "speed", quantity: 8 },
+          { productId: "jugo-naranja", quantity: 6 },
+          { productId: "agua", quantity: 20 },
+          { productId: "hielo", quantity: 10 },
+          { productId: "vasos", quantity: 6 }
         ]
       },
       {
         id: "gold",
         name: "Plan Gold",
         price: 20000,
+        basePeople: 50,
         active: true,
         description: "Una propuesta completa con mayor variedad de tragos.",
         includes: [
@@ -63,36 +94,69 @@
           "Vodka con Speed o jugo de naranja",
           "Gin tonic frutos rojos o limón",
           "Agua mineral 500 ml"
+        ],
+        consumptions: [
+          { productId: "gin", quantity: 4 },
+          { productId: "vodka", quantity: 5 },
+          { productId: "fernet", quantity: 6 },
+          { productId: "fernet-menta", quantity: 3 },
+          { productId: "campari", quantity: 2 },
+          { productId: "gancia", quantity: 2 },
+          { productId: "aperol", quantity: 3 },
+          { productId: "champagne", quantity: 3 },
+          { productId: "coca", quantity: 8 },
+          { productId: "speed", quantity: 10 },
+          { productId: "jugo-naranja", quantity: 8 },
+          { productId: "agua", quantity: 30 },
+          { productId: "hielo", quantity: 15 },
+          { productId: "vasos", quantity: 8 }
         ]
       },
       {
         id: "black",
         name: "Plan Black",
         price: 25000,
+        basePeople: 50,
         active: true,
         description: "Incluye todo el Plan Gold más tres tragos exclusivos de la casa a elección del cliente.",
         includes: [
           "Todo lo incluido en el Plan Gold",
           "3 tragos exclusivos de la casa a elección del cliente"
+        ],
+        consumptions: [
+          { productId: "gin", quantity: 5 },
+          { productId: "vodka", quantity: 6 },
+          { productId: "fernet", quantity: 7 },
+          { productId: "fernet-menta", quantity: 4 },
+          { productId: "campari", quantity: 3 },
+          { productId: "gancia", quantity: 3 },
+          { productId: "aperol", quantity: 4 },
+          { productId: "champagne", quantity: 5 },
+          { productId: "coca", quantity: 10 },
+          { productId: "speed", quantity: 12 },
+          { productId: "jugo-naranja", quantity: 10 },
+          { productId: "agua", quantity: 35 },
+          { productId: "hielo", quantity: 18 },
+          { productId: "vasos", quantity: 10 }
         ]
       }
     ],
     products: [
-      { id: "gin", category: "Bebidas", name: "Gin", unit: "botella", price: 0, active: true },
-      { id: "vodka", category: "Bebidas", name: "Vodka", unit: "botella", price: 0, active: true },
-      { id: "fernet", category: "Bebidas", name: "Fernet", unit: "botella", price: 0, active: true },
-      { id: "fernet-menta", category: "Bebidas", name: "Fernet menta", unit: "botella", price: 0, active: true },
-      { id: "campari", category: "Aperitivos", name: "Campari", unit: "botella", price: 0, active: true },
-      { id: "gancia", category: "Aperitivos", name: "Gancia", unit: "botella", price: 0, active: true },
-      { id: "aperol", category: "Aperitivos", name: "Aperol", unit: "botella", price: 0, active: true },
-      { id: "champagne", category: "Bebidas", name: "Champagne", unit: "botella", price: 0, active: true },
-      { id: "coca", category: "Sin alcohol", name: "Coca-Cola", unit: "botella", price: 0, active: true },
-      { id: "speed", category: "Sin alcohol", name: "Speed", unit: "lata", price: 0, active: true },
-      { id: "jugo-naranja", category: "Sin alcohol", name: "Jugo de naranja", unit: "litro", price: 0, active: true },
-      { id: "agua", category: "Sin alcohol", name: "Agua mineral 500 ml", unit: "unidad", price: 0, active: true },
-      { id: "hielo", category: "Insumos", name: "Hielo", unit: "bolsa", price: 0, active: true },
-      { id: "vasos", category: "Insumos", name: "Vasos", unit: "pack", price: 0, active: true }
-    ]
+      { id: "gin", category: "Bebidas", name: "Gin", unit: "botella", costPrice: 10000, salePrice: 18000, active: true, visible: true },
+      { id: "vodka", category: "Bebidas", name: "Vodka", unit: "botella", costPrice: 9000, salePrice: 16000, active: true, visible: true },
+      { id: "fernet", category: "Bebidas", name: "Fernet", unit: "botella", costPrice: 12000, salePrice: 20000, active: true, visible: true },
+      { id: "fernet-menta", category: "Bebidas", name: "Fernet menta", unit: "botella", costPrice: 12500, salePrice: 21000, active: true, visible: true },
+      { id: "campari", category: "Aperitivos", name: "Campari", unit: "botella", costPrice: 14000, salePrice: 24000, active: true, visible: true },
+      { id: "gancia", category: "Aperitivos", name: "Gancia", unit: "botella", costPrice: 8000, salePrice: 15000, active: true, visible: true },
+      { id: "aperol", category: "Aperitivos", name: "Aperol", unit: "botella", costPrice: 13000, salePrice: 22000, active: true, visible: true },
+      { id: "champagne", category: "Bebidas", name: "Champagne", unit: "botella", costPrice: 18000, salePrice: 32000, active: true, visible: true },
+      { id: "coca", category: "Sin alcohol", name: "Coca-Cola", unit: "botella", costPrice: 800, salePrice: 2000, active: true, visible: false },
+      { id: "speed", category: "Sin alcohol", name: "Speed", unit: "lata", costPrice: 500, salePrice: 1500, active: true, visible: false },
+      { id: "jugo-naranja", category: "Sin alcohol", name: "Jugo de naranja", unit: "litro", costPrice: 1500, salePrice: 4000, active: true, visible: false },
+      { id: "agua", category: "Sin alcohol", name: "Agua mineral 500 ml", unit: "unidad", costPrice: 600, salePrice: 2000, active: true, visible: true },
+      { id: "hielo", category: "Insumos", name: "Hielo", unit: "bolsa", costPrice: 3000, salePrice: 0, active: true, visible: false },
+      { id: "vasos", category: "Insumos", name: "Vasos", unit: "pack", costPrice: 4500, salePrice: 0, active: true, visible: false }
+    ],
   };
 
   const clone = value => JSON.parse(JSON.stringify(value));
@@ -115,9 +179,14 @@
           id: String(p.id || uid(`plan-${i + 1}`)),
           name: String(p.name || `Plan ${i + 1}`),
           price: asMoney(p.price),
+          basePeople: Math.max(1, Math.floor(asNumber(p.basePeople, 50))),
           active: p.active !== false,
           description: String(p.description || ""),
-          includes: Array.isArray(p.includes) ? p.includes.map(String).map(x => x.trim()).filter(Boolean) : []
+          includes: Array.isArray(p.includes) ? p.includes.map(String).map(x => x.trim()).filter(Boolean) : [],
+          consumptions: Array.isArray(p.consumptions) ? p.consumptions.map(c => ({
+            productId: String(c.productId || ""),
+            quantity: Math.max(0, Math.floor(asNumber(c.quantity, 0)))
+          })).filter(c => c.productId) : []
         }))
       : clone(DEFAULT_CONFIG.plans);
 
@@ -127,8 +196,10 @@
           category: String(p.category || "General"),
           name: String(p.name || `Producto ${i + 1}`),
           unit: String(p.unit || "unidad"),
-          price: asMoney(p.price),
-          active: p.active !== false
+          costPrice: asMoney(p.costPrice),
+          salePrice: asMoney(p.salePrice),
+          active: p.active !== false,
+          visible: p.visible !== false
         }))
       : clone(DEFAULT_CONFIG.products);
 
@@ -140,6 +211,13 @@
           percent: Math.min(100, Math.max(0, asNumber(t.percent, 0)))
         })).sort((a, b) => a.from - b.from)
       : clone(DEFAULT_CONFIG.discountTiers);
+
+    cfg.operatingCosts = {
+      staffCostPerHour: asMoney(source.operatingCosts?.staffCostPerHour || 0),
+      transportCostInternal: asMoney(source.operatingCosts?.transportCostInternal || 0),
+      rentalCostPerEvent: asMoney(source.operatingCosts?.rentalCostPerEvent || 0),
+      otherCostsPerEvent: asMoney(source.operatingCosts?.otherCostsPerEvent || 0)
+    };
 
     return cfg;
   }

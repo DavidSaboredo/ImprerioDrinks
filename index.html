@@ -102,9 +102,16 @@
 <div class="deposit"><span>Seña</span><strong id="depositAmount">$ 0</strong><small id="depositLabel">30% del total</small></div>
 <div class="deposit"><span>Saldo</span><strong id="balanceAmount">$ 0</strong><small>Luego de la seña</small></div>
 </div>
+<div id="internalCostsSection" class="summary-lines" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+<div style="color: var(--cyan); font-size: .85rem; font-weight: 850; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px;">Análisis interno</div>
+<div class="summary-line"><span>Costo total</span><strong id="internalCostAmount">$ 0</strong></div>
+<div class="summary-line"><span>Ganancia estimada</span><strong class="discount-good" id="profitAmount">$ 0</strong></div>
+<div class="summary-line"><span>Margen de ganancia</span><strong id="marginAmount">0 %</strong></div>
+</div>
 <div class="summary-actions">
 <button class="btn btn-whatsapp" id="sharePdf" type="button">Compartir PDF por WhatsApp</button>
 <button class="btn btn-primary" id="downloadPdf" type="button">Descargar PDF</button>
+<button class="btn btn-gold" id="downloadInternalPdf" type="button">Descargar análisis interno</button>
 <button class="btn btn-gold" id="copyQuote" type="button">Copiar resumen</button>
 </div>
 <p class="legal" id="shareHelp">En celulares compatibles se abre el menú para elegir WhatsApp y enviar el PDF como archivo.</p>
@@ -112,5 +119,5 @@
 </main>
 </div>
 <div aria-live="polite" class="toast" id="toast" role="status"></div>
-<script src="./js/login.js"></script><script src="./js/logo-data.js"></script><script src="./js/store.js"></script><script src="./js/app.js"></script></body>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script><script src="./js/login.js"></script><script src="./js/logo-data.js"></script><script src="./js/store.js"></script><script src="./js/costs.js"></script><script src="./js/app.js"></script></body>
 </html>

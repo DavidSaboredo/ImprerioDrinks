@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#020506" name="theme-color"/>
+<meta content="Carta de bebidas de Imperio Drinks" name="description"/>
+<title>Imperio Drinks | Carta</title>
+<meta content="5.0" name="imperio-version"/>
+<link href="./css/styles.css" rel="stylesheet"/>
+<style>
+  .carta-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .carta-header {
+    text-align: center;
+    margin-bottom: 40px;
+    border-bottom: 3px solid var(--amber, #f39c12);
+    padding-bottom: 20px;
+  }
+
+  .carta-header img {
+    max-width: 180px;
+    margin-bottom: 15px;
+  }
+
+  .carta-header h1 {
+    margin: 0;
+    color: #020506;
+    font-size: 2.5em;
+  }
+
+  .carta-header p {
+    color: #666;
+    margin: 5px 0;
+  }
+
+  .qr-section {
+    text-align: center;
+    margin: 30px 0;
+    padding: 30px;
+    background: #f5f7f8;
+    border-radius: 8px;
+  }
+
+  .qr-section h3 {
+    margin-top: 0;
+    color: #020506;
+  }
+
+  #qrCode {
+    display: inline-block;
+    background: white;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .planes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+  }
+
+  .plan-card {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .plan-card.gold .plan-header {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  }
+
+  .plan-card.silver .plan-header {
+    background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
+  }
+
+  .plan-card.black .plan-header {
+    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+  }
+
+  .plan-card.economic .plan-header {
+    background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+  }
+
+  .plan-header {
+    padding: 20px;
+    color: white;
+  }
+
+  .plan-header h2 {
+    margin: 0 0 8px 0;
+    font-size: 1.8em;
+  }
+
+  .plan-price {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin: 8px 0 0 0;
+  }
+
+  .plan-description {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95em;
+    margin-top: 8px;
+  }
+
+  .plan-body {
+    padding: 20px;
+  }
+
+  .plan-body h3 {
+    color: #020506;
+    font-size: 1.1em;
+    margin: 0 0 15px 0;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    color: #666;
+  }
+
+  .bebidas-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .bebidas-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+    font-size: 0.95em;
+  }
+
+  .bebidas-list li:last-child {
+    border-bottom: none;
+  }
+
+  .bebidas-list li:before {
+    content: "🍹 ";
+    margin-right: 8px;
+  }
+
+  .footer-info {
+    text-align: center;
+    margin-top: 50px;
+    padding: 30px;
+    background: #f5f7f8;
+    border-radius: 8px;
+    color: #666;
+  }
+
+  .footer-info p {
+    margin: 8px 0;
+  }
+
+  .contact-button {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 30px;
+    background: #25d366;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+
+  .contact-button:hover {
+    background: #20ba5a;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+  }
+
+  .empty-state p {
+    font-size: 1.1em;
+  }
+
+  .empty-state a {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 30px;
+    background: #f39c12;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+  }
+
+  @media (max-width: 768px) {
+    .carta-header h1 {
+      font-size: 2em;
+    }
+
+    .planes-grid {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+
+    .plan-header h2 {
+      font-size: 1.4em;
+    }
+  }
+</style>
+</head>
+<body class="app-page">
+<div class="ambient ambient-one"></div>
+<div class="ambient ambient-two"></div>
+
+<div class="shell">
+  <div class="carta-container">
+    <div class="carta-header">
+      <img alt="Logo de Imperio Drinks" src="./assets/logo-imperio-drinks.jpeg"/>
+      <h1>Nuestros Planes</h1>
+      <p>Selecciona el plan que más se adapte a tu evento</p>
+    </div>
+
+    <div class="qr-section">
+      <h3>¿Consultas o presupuesto personalizado?</h3>
+      <p>Escanea el código para contactarnos por WhatsApp</p>
+      <div id="qrCode"></div>
+    </div>
+
+    <div id="planesContainer" class="planes-grid">
+      <!-- Los planes se cargarán aquí -->
+    </div>
+
+    <div class="footer-info">
+      <h3>¿Necesitas más información?</h3>
+      <p>Nuestro equipo está listo para armar el plan perfecto para tu evento</p>
+      <a class="contact-button" href="#" id="contactButton">Contactar por WhatsApp</a>
+      <p id="businessInfo" style="font-size: 0.9em; margin-top: 20px;">
+        <!-- Se cargará info de negocio -->
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="./js/store.js"></script>
+<script src="./js/costs.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  const planesContainer = document.getElementById("planesContainer");
+  const qrCodeContainer = document.getElementById("qrCode");
+  const contactButton = document.getElementById("contactButton");
+  const businessInfo = document.getElementById("businessInfo");
+
+  const planTones = {
+    silver: "silver",
+    gold: "gold",
+    black: "black",
+    economico: "economic",
+    "súper economico": "economic",
+    "super economico": "economic"
+  };
+
+  function getPlanTone(planName) {
+    const name = planName.toLowerCase();
+    for (const [key, tone] of Object.entries(planTones)) {
+      if (name.includes(key)) return tone;
+    }
+    return "economic";
+  }
+
+  function renderPlans() {
+    const config = ImperioStore.load();
+    const activePlans = config.plans.filter(plan => plan.active);
+
+    if (!activePlans.length) {
+      planesContainer.innerHTML = '<div class="empty-state"><p>No hay planes disponibles en este momento.</p></div>';
+      return;
+    }
+
+    planesContainer.innerHTML = activePlans.map(plan => {
+      const tone = getPlanTone(plan.name);
+      const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+      const price = currency.format(plan.price);
+      
+      const bebidasHtml = (plan.includes || []).map(bebida => `<li>${bebida}</li>`).join("");
+
+      return `
+        <div class="plan-card ${tone}">
+          <div class="plan-header">
+            <h2>${escapeHtml(plan.name)}</h2>
+            <div class="plan-price">${price}<span style="font-size: 0.6em; font-weight: normal;"> / persona</span></div>
+            <p class="plan-description">${escapeHtml(plan.description)}</p>
+          </div>
+          <div class="plan-body">
+            <h3>Incluye:</h3>
+            <ul class="bebidas-list">
+              ${bebidasHtml}
+            </ul>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderQR() {
+    const config = ImperioStore.load();
+    const phone = config.business.phone || "549000000000";
+    const message = "Hola, me interesa conocer más sobre los planes de Imperio Drinks";
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    // Limpiar QR anterior
+    qrCodeContainer.innerHTML = "";
+
+    // Generar nuevo QR
+    QRCode.toCanvas(qrCodeContainer, whatsappUrl, {
+      errorCorrectionLevel: 'H',
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+      width: 250,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF',
+      }
+    }, (error) => {
+      if (error) console.error(error);
+    });
+
+    // Configurar botón de contacto
+    contactButton.href = whatsappUrl;
+  }
+
+  function renderBusinessInfo() {
+    const config = ImperioStore.load();
+    const { business } = config;
+
+    const info = [
+      business.name,
+      business.phone ? `WhatsApp: ${business.phone}` : "",
+      business.instagram ? `Instagram: ${business.instagram}` : "",
+      business.paymentAlias ? `Alias: ${business.paymentAlias}` : ""
+    ].filter(Boolean).join(" • ");
+
+    businessInfo.textContent = info;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>'"]/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "'": "&#39;",
+      '"': "&quot;"
+    }[char]));
+  }
+
+  // Inicializar
+  renderPlans();
+  renderQR();
+  renderBusinessInfo();
+
+  // Actualizar cuando cambian los datos en otra pestaña
+  window.addEventListener("storage", (event) => {
+    if (event.key === ImperioStore.key) {
+      renderPlans();
+      renderQR();
+      renderBusinessInfo();
+    }
+  });
+})();
+</script>
+</body>
+</html>
