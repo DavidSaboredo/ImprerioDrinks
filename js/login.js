@@ -1,6 +1,4 @@
-// Credenciales
-const ADMIN_USER = 'imperiodrinks';
-const ADMIN_PASSWORD = 'Bassi2026';
+// Las credenciales se verifican en el servidor (api/login.js)
 const SESSION_KEY = 'imperio_admin_session';
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 horas
 
@@ -24,7 +22,8 @@ function checkAuth() {
 }
 
 // Si está en admin.html, verificar autenticación
-if (window.location.pathname.includes('admin.html')) {
+// (Vercel usa cleanUrls, así que la ruta puede ser /admin o /admin.html)
+if (/\/admin(\.html)?\/?$/.test(window.location.pathname)) {
   if (!checkAuth()) {
     window.location.href = './login.html';
   }
@@ -39,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const submitBtn = document.getElementById('submitBtn');
 
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const username = usernameInput.value.trim();
@@ -48,8 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
       errorMsg.classList.remove('show');
       submitBtn.disabled = true;
 
-      // Validar credenciales
-      if (username === ADMIN_USER && password === ADMIN_PASSWORD) {
+      // Validar credenciales en el servidor
+      let valid = false;
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        valid = response.ok;
+      } catch (err) {
+        valid = false;
+      }
+
+      if (valid) {
         // Crear sesión
         const sessionData = {
           user: username,

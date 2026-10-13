@@ -763,8 +763,7 @@ El código, el diseño, el logo y la identidad visual no deben ser utilizados co
 **Presupuestos claros, rápidos y personalizados para cada evento.**
 
 ---
-* Usuario: imperiodrinks
-* Contraseña: Bassi2026
+* Acceso admin: configurar `ADMIN_USER` y `ADMIN_PASSWORD` en Vercel → Settings → Environment Variables.
 ---
 
 </div>
