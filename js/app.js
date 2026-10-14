@@ -1540,23 +1540,8 @@
   }
 
   function downloadInternalPdf() {
-    try {
-      generateQrAndDownloadInternalPdf();
-      showToast("Generando análisis interno...");
-    } catch (error) {
-      console.error(error);
-      showToast("No se pudo generar el análisis interno");
-    }
-  }
-
-  function downloadInternalPdf() {
-    try {
-      generateQrAndDownloadInternalPdf();
-      showToast("Generando análisis interno...");
-    } catch (error) {
-      console.error(error);
-      showToast("No se pudo generar el análisis interno");
-    }
+    // generateQrAndDownloadInternalPdf ya muestra el aviso de éxito o error
+    generateQrAndDownloadInternalPdf();
   }
 
   function generateQrAndDownloadInternalPdf() {
