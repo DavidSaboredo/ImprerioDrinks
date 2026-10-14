@@ -29,12 +29,12 @@
 
   .carta-header h1 {
     margin: 0;
-    color: #020506;
+    color: var(--imperio-white, #fff8ef);
     font-size: 2.5em;
   }
 
   .carta-header p {
-    color: #666;
+    color: var(--muted, #9cafb5);
     margin: 5px 0;
   }
 
@@ -51,16 +51,28 @@
     color: #020506;
   }
 
+  .qr-section p {
+    color: #4a5559;
+  }
+
   #qrCode {
     display: inline-block;
+    max-width: 100%;
     background: white;
     padding: 10px;
     border-radius: 4px;
   }
 
+  /* El QR se dibuja a 250px: en celulares chicos se achica para no desbordar */
+  #qrCode canvas {
+    display: block;
+    max-width: 100%;
+    height: auto !important;
+  }
+
   .planes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 25px;
     margin-top: 40px;
   }
@@ -83,7 +95,7 @@
   }
 
   .plan-card.silver .plan-header {
-    background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
+    background: linear-gradient(135deg, #8d99a1 0%, #67747c 100%);
   }
 
   .plan-card.black .plan-header {
@@ -97,6 +109,7 @@
   .plan-header {
     padding: 20px;
     color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
 
   .plan-header h2 {
@@ -110,8 +123,9 @@
     margin: 8px 0 0 0;
   }
 
-  .plan-description {
-    color: rgba(255, 255, 255, 0.9);
+  /* .plan-card p de styles.css lo pintaba gris y no se leía sobre el color del plan */
+  .plan-card .plan-description {
+    color: rgba(255, 255, 255, 0.95);
     font-size: 0.95em;
     margin-top: 8px;
   }
@@ -180,6 +194,11 @@
     background: #20ba5a;
   }
 
+  .contact-button[hidden],
+  .qr-section[hidden] {
+    display: none;
+  }
+
   .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -214,6 +233,11 @@
     .plan-header h2 {
       font-size: 1.4em;
     }
+
+    .qr-section,
+    .footer-info {
+      padding: 20px;
+    }
   }
 </style>
     <link rel="icon" href="./assets/logo-imperio-drinks.jpeg" />
@@ -240,12 +264,12 @@
     <div class="carta-header">
       <img alt="Logo de Imperio Drinks" src="./assets/logo-imperio-drinks.jpeg"/>
       <h1>Nuestros Planes</h1>
-      <p>Selecciona el plan que más se adapte a tu evento</p>
+      <p>Elegí el plan que mejor se adapte a tu evento</p>
     </div>
 
     <div class="qr-section">
       <h3>¿Consultas o presupuesto personalizado?</h3>
-      <p>Escanea el código para contactarnos por WhatsApp</p>
+      <p>Escaneá el código para escribirnos por WhatsApp</p>
       <div id="qrCode"></div>
     </div>
 
@@ -254,7 +278,7 @@
     </div>
 
     <div class="footer-info">
-      <h3>¿Necesitas más información?</h3>
+      <h3>¿Necesitás más información?</h3>
       <p>Nuestro equipo está listo para armar el plan perfecto para tu evento</p>
       <a class="contact-button" href="#" id="contactButton">Contactar por WhatsApp</a>
       <p id="businessInfo" style="font-size: 0.9em; margin-top: 20px;">
@@ -266,13 +290,14 @@
 
 <script src="./js/store.js"></script>
 <script src="./js/costs.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.js" integrity="sha384-VT1EeewTCEXgndcPMQ0PzV+uVFYjxFIjmAA7s5gcMX9t4Dt5TD+OVQIn7NJWIXn7" crossorigin="anonymous"></script>
 <script>
 (() => {
   "use strict";
 
   const planesContainer = document.getElementById("planesContainer");
   const qrCodeContainer = document.getElementById("qrCode");
+  const qrSection = document.querySelector(".qr-section");
   const contactButton = document.getElementById("contactButton");
   const businessInfo = document.getElementById("businessInfo");
 
@@ -307,7 +332,7 @@
       const currency = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
       const price = currency.format(plan.price);
       
-      const bebidasHtml = (plan.includes || []).map(bebida => `<li>${bebida}</li>`).join("");
+      const bebidasHtml = (plan.includes || []).map(bebida => `<li>${escapeHtml(bebida)}</li>`).join("");
 
       return `
         <div class="plan-card ${tone}">
@@ -327,20 +352,64 @@
     }).join("");
   }
 
+  // Misma normalización que el presupuestador: "3442 15 000000" -> "5493442000000"
+  function normalizedWhatsappPhone(raw, countryCodeRaw) {
+    let digits = String(raw || "").replace(/\D/g, "");
+    if (!digits) return "";
+    const countryCode = String(countryCodeRaw || "54").replace(/\D/g, "") || "54";
+    if (digits.startsWith(countryCode)) return digits;
+    digits = digits.replace(/^0+/, "");
+    digits = digits.replace(/^(\d{2,4})15/, "$1");
+    return countryCode === "54" ? `549${digits}` : `${countryCode}${digits}`;
+  }
+
   function renderQR() {
     const config = ImperioStore.load();
-    const phone = config.business.phone || "549000000000";
-    const message = "Hola, me interesa conocer más sobre los planes de Imperio Drinks";
-    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    const { business } = config;
+    const phone = normalizedWhatsappPhone(business.phone, business.countryCode);
+    const instagram = String(business.instagram || "").replace(/^@/, "").trim();
 
     // Limpiar QR anterior
     qrCodeContainer.innerHTML = "";
 
-    // Generar nuevo QR
-    QRCode.toCanvas(qrCodeContainer, whatsappUrl, {
+    // Sin WhatsApp cargado: no mostrar un QR ni un link a un número inexistente
+    if (!phone) {
+      qrSection.hidden = true;
+      if (instagram) {
+        contactButton.href = `https://www.instagram.com/${encodeURIComponent(instagram)}/`;
+        contactButton.textContent = "Escribinos por Instagram";
+        contactButton.target = "_blank";
+        contactButton.rel = "noopener";
+        contactButton.hidden = false;
+      } else {
+        contactButton.hidden = true;
+      }
+      return;
+    }
+
+    const message = "Hola, me interesa conocer más sobre los planes de Imperio Drinks";
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    // Configurar botón de contacto (antes del QR, así funciona aunque el QR falle)
+    qrSection.hidden = false;
+    contactButton.href = whatsappUrl;
+    contactButton.textContent = "Contactar por WhatsApp";
+    contactButton.target = "_blank";
+    contactButton.rel = "noopener";
+    contactButton.hidden = false;
+
+    // Si la librería del QR no cargó, el botón de WhatsApp sigue funcionando
+    if (typeof QRCode === "undefined") {
+      console.error("No se pudo cargar la librería del código QR");
+      return;
+    }
+
+    // toCanvas necesita un <canvas>, no un <div>
+    const canvas = document.createElement("canvas");
+    qrCodeContainer.appendChild(canvas);
+
+    QRCode.toCanvas(canvas, whatsappUrl, {
       errorCorrectionLevel: 'H',
-      type: 'image/png',
-      quality: 0.92,
       margin: 1,
       width: 250,
       color: {
@@ -350,9 +419,6 @@
     }, (error) => {
       if (error) console.error(error);
     });
-
-    // Configurar botón de contacto
-    contactButton.href = whatsappUrl;
   }
 
   function renderBusinessInfo() {
