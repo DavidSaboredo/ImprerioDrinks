@@ -8,6 +8,8 @@
     maximumFractionDigits: 0,
   });
   const dateFormatter = new Intl.DateTimeFormat("es-AR");
+  // Sesión de administrador (js/login.js). Sin sesión no se muestran costos ni ganancias.
+  const isAdmin = typeof checkAuth === "function" && checkAuth();
 
   const els = {
     form: $("#quoteForm"),
@@ -359,8 +361,8 @@
     els.depositLabel.textContent = `${data.depositPercent}% del total`;
     els.balanceAmount.textContent = money(data.balance);
 
-    // Mostrar costos internos si hay datos
-    if (data.internalCosts && data.internalCosts.totalCost > 0) {
+    // Mostrar costos internos solo al administrador con sesión iniciada
+    if (isAdmin && data.internalCosts && data.internalCosts.totalCost > 0) {
       els.internalCostsSection.style.display = "block";
       els.internalCostAmount.textContent = money(data.internalCosts.totalCost);
       els.profitAmount.textContent = money(data.profit);
@@ -1540,6 +1542,7 @@
   }
 
   function downloadInternalPdf() {
+    if (!isAdmin) return;
     // generateQrAndDownloadInternalPdf ya muestra el aviso de éxito o error
     generateQrAndDownloadInternalPdf();
   }
@@ -1599,6 +1602,8 @@
   els.addProduct.addEventListener("click", addProduct);
   els.sharePdf.addEventListener("click", sharePdf);
   els.downloadPdf.addEventListener("click", downloadPdf);
+  // El análisis interno (costos y ganancia) solo lo ve el administrador
+  if (isAdmin) els.downloadInternalPdf.style.display = "";
   els.downloadInternalPdf.addEventListener("click", downloadInternalPdf);
   els.copyQuote.addEventListener("click", copyMessage);
   els.reloadPrices.addEventListener("click", () => reloadConfig(true));
